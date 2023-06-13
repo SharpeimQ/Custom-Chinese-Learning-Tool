@@ -19,10 +19,19 @@ def count_unique_chinese_characters_from_google_docs(file_id, credentials_path)
 
   # Get the content of the Google Docs file
   document = service.get_document(file_id)
-  content = document.body.content.map(&:paragraph).flatten.map(&:text_run).map(&:content).join
+  content = document.body.content
 
-  chinese_characters = content.scan(/[\p{Han}&&[^0-9]]/u)
-  unique_characters = chinese_characters.to_set
+  chinese_characters = content.each_with_object([]) do |element, result|
+    next unless element.paragraph&.elements
+
+    element.paragraph.elements.each do |paragraph_element|
+      next unless paragraph_element.text_run
+
+      result << paragraph_element.text_run.content.scan(/[\p{Han}&&[^0-9]]/u)
+    end
+  end.flatten
+
+  unique_characters = chinese_characters.uniq
 
   unique_characters.size
 end
