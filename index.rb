@@ -11,12 +11,20 @@ class ChineseLearningTool
     @credentials_path = credentials_path
   end
 
-  def count_unique_char
+  def count_unique_chars
     authenticate
     content = extract_document_content
-    chinese_char = extract_chinese_char(content)
-    count = chinese_char.uniq.size
+    chinese_chars = extract_chinese_char(content)
+    count = chinese_chars.uniq.size
     puts "You have learned #{count} unique Chinese characters!"
+  end
+
+  def shuffle_unique_chars
+    authenticate
+    content = extract_document_content
+    shuffled_unique_chinese_chars = extract_chinese_char(content).uniq.shuffle
+    shuffled_unique_chinese_chars.each { |char| print "#{char} " }
+    puts
   end
 
   # authentication methods are kept private
@@ -56,4 +64,5 @@ file_id = '1Z5OrYC2HS4boqnDMF0y_qUwa2Dkq3RIm8aEy47v-yMM'
 credentials_path = '/home/sharpeim/Desktop/Developer/uniq-chinese-char-count-2442e44427dd.json'
 
 chinese = ChineseLearningTool.new(file_id, credentials_path)
-chinese.count_unique_char
+chinese.shuffle_unique_chars
+chinese.count_unique_chars
