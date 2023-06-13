@@ -1,11 +1,25 @@
 # frozen_string_literal: true
 
-require 'google_drive'
+require 'google/apis/docs_v1'
+require 'googleauth'
+require 'googleauth/stores/file_token_store'
 
 def count_unique_chinese_characters_from_google_docs(file_id, credentials_path)
-  session = GoogleDrive::Session.from_service_account_key(credentials_path)
-  doc = session.file_by_id(file_id)
-  content = doc.export_as_string('text/plain')
+  # Set up authentication
+  token_store = Google::Auth::Stores::FileTokenStore.new(file: credentials_path)
+  authorizer = Google::Auth::ServiceAccountCredentials.make_creds(
+    json_key_io: File.open(credentials_path),
+    scope: Google::Apis::DocsV1::AUTH_DOCUMENTS_READONLY,
+    token_store: token_store
+  )
+
+  # Initialize the Google Docs API client
+  service = Google::Apis::DocsV1::DocsService.new
+  service.authorization = authorizer
+
+  # Get the content of the Google Docs file
+  document = service.get_document(file_id)
+  content = document.body.content.map(&:paragraph).flatten.map(&:text_run).map(&:content).join
 
   chinese_characters = content.scan(/[\p{Han}&&[^0-9]]/u)
   unique_characters = chinese_characters.to_set
